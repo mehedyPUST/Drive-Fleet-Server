@@ -35,8 +35,8 @@ async function run() {
         })
 
         app.post('/car', async (req, res) => {
-            const carData = req.body
-            const result = await carCollection.insertOne(carData)
+            const carDataWithUser = req.body
+            const result = await carCollection.insertOne(carDataWithUser)
             res.json(result)
         })
 
@@ -81,6 +81,14 @@ async function run() {
 
             res.json(result);
         });
+
+
+        app.get('/cars/user/:userId', async (req, res) => {
+            const { userId } = req.params;
+            const result = await carCollection.find({ addedBy: userId }).toArray();
+            res.json(result);
+        });
+
 
 
         // Send a ping to confirm a successful connection
