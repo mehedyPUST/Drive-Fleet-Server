@@ -10,14 +10,13 @@ const PORT = process.env.PORT;
 app.use(cors())
 app.use(express.json())
 
-
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
         strict: true,
         deprecationErrors: true,
     },
-    readPreference: 'primary'  // MongoDB Atlas free tier এর জন্য যোগ করা হয়েছে
+    readPreference: 'primary'
 });
 
 const JWKS = createRemoteJWKSet(
@@ -66,7 +65,7 @@ async function run() {
         app.post('/car', async (req, res) => {
             const carDataWithUser = req.body
             const result = await carCollection.insertOne(carDataWithUser)
-            // নতুন যোগ করা ডাটা immediate return করার জন্য
+            
             const newCar = await carCollection.findOne({ _id: result.insertedId })
             res.json(newCar)
         })
