@@ -11,15 +11,15 @@ app.use(cors())
 app.use(express.json())
 
 
-
-
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
         strict: true,
         deprecationErrors: true,
-    }
+    },
+    readPreference: 'primary'  // MongoDB Atlas free tier এর জন্য যোগ করা হয়েছে
 });
+
 const JWKS = createRemoteJWKSet(
     new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
 )
@@ -51,7 +51,7 @@ const verifyToken = async (req, res, next) => {
 
 async function run() {
     try {
-        // Connect the client to the server	(optional starting in v4.7)
+        // Connect the client to the server (optional starting in v4.7)
         // await client.connect();
 
         const db = client.db('Drive-Fleet')
@@ -66,16 +66,16 @@ async function run() {
         app.post('/car', async (req, res) => {
             const carDataWithUser = req.body
             const result = await carCollection.insertOne(carDataWithUser)
-            res.json(result)
+            // নতুন যোগ করা ডাটা immediate return করার জন্য
+            const newCar = await carCollection.findOne({ _id: result.insertedId })
+            res.json(newCar)
         })
-
 
         app.get('/cars/:id', verifyToken, async (req, res) => {
             const { id } = req.params
             const result = await carCollection.findOne({ _id: new ObjectId(id) })
             res.json(result)
         })
-
 
         app.patch('/car/:id', verifyToken, async (req, res) => {
             const { id } = req.params
@@ -86,7 +86,6 @@ async function run() {
             )
             res.json(result)
         });
-
 
         app.delete('/car/:id', verifyToken, async (req, res) => {
             const { id } = req.params
@@ -100,13 +99,11 @@ async function run() {
             res.json(result)
         })
 
-
         app.get('/booking/:userId', verifyToken, async (req, res) => {
             const { userId } = req.params;
             const result = await bookingCollection.find({ userId }).toArray();
             res.json(result);
         });
-
 
         app.get('/cars/user/:userId', verifyToken, async (req, res) => {
             const { userId } = req.params;
@@ -120,9 +117,6 @@ async function run() {
             res.json(result)
         })
 
-
-
-
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -132,11 +126,6 @@ async function run() {
     }
 }
 run().catch(console.dir);
-
-
-
-
-
 
 app.get('/', (req, res) => {
     res.send('Server is running Fine !')
