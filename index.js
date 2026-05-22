@@ -90,13 +90,9 @@ async function run() {
             res.json(result)
         })
 
-        // =========================
-        // BOOKING CREATE (FIXED SAFE)
-        // =========================
         app.post('/booking', verifyToken, async (req, res) => {
             const bookingData = req.body;
 
-            // 3. car exist check (FIX)
             const car = await carCollection.findOne({
                 _id: new ObjectId(bookingData.carId)
             });
@@ -105,10 +101,8 @@ async function run() {
                 return res.status(404).json({ message: "Car not found" });
             }
 
-            // 1. insert booking
             const result = await bookingCollection.insertOne(bookingData);
 
-            // 2. increase booking count in car
             await carCollection.updateOne(
                 { _id: new ObjectId(bookingData.carId) },
                 {
@@ -131,9 +125,6 @@ async function run() {
             res.json(result);
         });
 
-        // =========================
-        // DELETE BOOKING (FIXED SAFE)
-        // =========================
         app.delete('/booking/:bookingId', verifyToken, async (req, res) => {
             const { bookingId } = req.params;
 
@@ -145,12 +136,10 @@ async function run() {
                 return res.status(404).json({ message: 'Booking not found' });
             }
 
-            // 2. delete booking (FIXED await)
             const result = await bookingCollection.deleteOne({
                 _id: new ObjectId(bookingId)
             });
 
-            // 3. decrease booking count safely (NO negative)
             await carCollection.updateOne(
                 {
                     _id: new ObjectId(booking.carId),
@@ -167,7 +156,6 @@ async function run() {
         console.log("MongoDB Connected Successfully!");
 
     } finally {
-        // keep connection open
     }
 }
 
